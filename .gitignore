@@ -1,3 +1,7 @@
+# MLflow
+mlruns
+mlflow.db
+
 # IDE
 .idea
 scratch.txt

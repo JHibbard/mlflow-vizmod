@@ -118,8 +118,9 @@ def save_model(
     if mlflow_model is None:
         mlflow_model = Model()
     if signature is not None:
-        # _save_example(mlflow_model, input_example, path)
-        pass
+        # tensorflow -> _save_example(mlflow_model, input_example, path)
+        # sklearn
+        mlflow_model.signature = signature
     # root_relative_path = _copy_file_or_tree(src=artifact_path, dst=path, dst_dir=None)
     # shutil.move(os.path.join(path, root_relative_path), os.path.join(path, MODEL_DIR_SUBPATH))
 
