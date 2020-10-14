@@ -10,7 +10,6 @@ Vega (native) format
 # Standard Libraries
 import logging
 import os
-import shutil
 import importlib
 import pkgutil
 
@@ -21,8 +20,9 @@ from mlflow.models import Model
 from mlflow.models.model import MLMODEL_FILE_NAME
 from mlflow import pyfunc
 from mlflow.utils.environment import _mlflow_conda_env
-from mlflow.utils.file_utils import _copy_file_or_tree
 from mlflow.utils.annotations import keyword_only
+from mlflow.models.utils import _save_example
+from mlflow.utils.model_utils import _get_flavor_configuration
 from mlflow.exceptions import MlflowException
 from mlflow.protos.databricks_pb2 import DIRECTORY_NOT_EMPTY
 from mlflow.tracking.artifact_utils import _download_artifact_from_uri
@@ -35,9 +35,9 @@ import mlflow_vismod.styles
 
 FLAVOR_NAME = 'mlflow_vismod'
 MODEL_DIR_SUBPATH = 'viz'
-
-_SERIALIZED_VEGA_MODEL_FILE_NAME = ''
-_PICKLE_MODULE_INFO_FILE_NAME = 'pickle_module_info.txt'
+SERIALIZATION_FORMAT_PICKLE = "pickle"
+SERIALIZATION_FORMAT_CLOUDPICKLE = "cloudpickle"
+SUPPORTED_SERIALIZATION_FORMATS = [SERIALIZATION_FORMAT_PICKLE, SERIALIZATION_FORMAT_CLOUDPICKLE]
 
 _logger = logging.getLogger(__name__)
 
@@ -118,19 +118,15 @@ def save_model(
     if mlflow_model is None:
         mlflow_model = Model()
     if signature is not None:
-        # tensorflow -> _save_example(mlflow_model, input_example, path)
-        # sklearn
         mlflow_model.signature = signature
-    # root_relative_path = _copy_file_or_tree(src=artifact_path, dst=path, dst_dir=None)
-    # shutil.move(os.path.join(path, root_relative_path), os.path.join(path, MODEL_DIR_SUBPATH))
+    if input_example is not None:
+        _save_example(mlflow_model, input_example, path)
 
-    # Style-specific Saving
+    # Style-specific Save Logic
     current_style = _discovered_styles[f'mlflow_vismod.styles.{style}']
-    mlflow.log_param('path', path)
-    current_style.Style.save(model, 'vizzy.html')
-    root_relative_path = _copy_file_or_tree(src='vizzy.html', dst=os.path.join(path, 'vizzy.html'), dst_dir=None)
-    shutil.move(os.path.join(path, root_relative_path), os.path.join(path, MODEL_DIR_SUBPATH))
+    current_style.Style.save(model, path)
 
+    # Saving Conda Environment
     conda_env_subpath = 'conda.yaml'
     if conda_env is None:
         conda_env = get_default_conda_env(style=style)
@@ -142,7 +138,8 @@ def save_model(
 
     mlflow_model.add_flavor(
         FLAVOR_NAME,
-        saved_model_dir=MODEL_DIR_SUBPATH,
+        # saved_model_dir=MODEL_DIR_SUBPATH,
+        pickled_model='viz.pkl',
     )
     pyfunc.add_to_model(mlflow_model, loader_module="mlflow_vismod", env=conda_env_subpath)
     mlflow_model.save(os.path.join(path, MLMODEL_FILE_NAME))
@@ -150,8 +147,47 @@ def save_model(
 
 def load_model(model_uri, style=None):
     """
+    def load_model(model_uri):
+    '''
+    Load a scikit-learn model from a local file or a run.
+    :param model_uri: The location, in URI format, of the MLflow model, for example:
+                      - ``/Users/me/path/to/local/model``
+                      - ``relative/path/to/local/model``
+                      - ``s3://my_bucket/path/to/model``
+                      - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
+                      - ``models:/<model_name>/<model_version>``
+                      - ``models:/<model_name>/<stage>``
+                      For more information about supported URI schemes, see
+                      `Referencing Artifacts <https://www.mlflow.org/docs/latest/concepts.html#
+                      artifact-locations>`_.
+    :return: A scikit-learn model.
+    .. code-block:: python
+        :caption: Example
+        import mlflow.sklearn
+        sk_model = mlflow.sklearn.load_model("runs:/96771d893a5e46159d9f3b49bf9013e2/sk_models")
+        # use Pandas DataFrame to make predictions
+        pandas_df = ...
+        predictions = sk_model.predict(pandas_df)
+    '''
+    local_model_path = _download_artifact_from_uri(artifact_uri=model_uri)
+    flavor_conf = _get_flavor_configuration(model_path=local_model_path, flavor_name=FLAVOR_NAME)
+    sklearn_model_artifacts_path = os.path.join(local_model_path, flavor_conf["pickled_model"])
+    serialization_format = flavor_conf.get("serialization_format", SERIALIZATION_FORMAT_PICKLE)
+    return _load_model_from_local_file(
+        path=sklearn_model_artifacts_path, serialization_format=serialization_format
+    )
+    """
     """
     current_style = _discovered_styles[f'mlflow_vismod.styles.{style}']
     return current_style.Style(
         artifact_uri=_download_artifact_from_uri(artifact_uri=model_uri),
+    )
+    """
+    current_style = _discovered_styles[f'mlflow_vismod.styles.{style}']
+    local_model_path = _download_artifact_from_uri(artifact_uri=model_uri)
+    flavor_conf = _get_flavor_configuration(model_path=local_model_path, flavor_name=FLAVOR_NAME)
+    vismod_model_artifacts_path = os.path.join(local_model_path, flavor_conf['pickled_model'])
+    serialization_format = flavor_conf.get('serialization_format', SERIALIZATION_FORMAT_CLOUDPICKLE)
+    return current_style.Style(
+        artifact_uri=vismod_model_artifacts_path,
     )
