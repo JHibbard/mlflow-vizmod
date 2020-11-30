@@ -5,9 +5,7 @@ APP_NAME = "mlflow_vismod"
 VERSION = "1.1.1"
 LICENSE = "MIT"
 AUTHOR = "James Hibbard, Andrew Bauman"
-DESCRIPTION = (
-    "MLflow model flavour for mlflow_vismod visualization grammar"
-)
+DESCRIPTION = "MLflow model flavour for mlflow_vismod visualization grammar"
 
 setup(
     name=APP_NAME,
@@ -16,16 +14,17 @@ setup(
     author=AUTHOR,
     description=DESCRIPTION,
     install_requires=[
-        'mlflow>=1.11.0',
-        'PyYAML==5.3.1',
-        'altair==4.1.0',
-        'altair_viewer',
+        "mlflow>=1.11.0",
+        "PyYAML==5.3.1",
+        "altair==4.1.0",
+        "altair_viewer",
     ],
-    extras_require={
-    },
+    extras_require={},
     packages=find_namespace_packages("src"),
     package_dir={"": "src"},
-    package_data={"": ["*.yaml"], },
+    package_data={
+        "": ["*.yaml"],
+    },
     entry_points="""
     [console_scripts]
     """,
