@@ -72,56 +72,76 @@ The following code snippet is how you log a vega lite visualization model.
 
 ```python
 # Define Viz
-viz1 = alt.Chart(
-    pd.concat([X_train, y_train], axis=1, sort=False)
+viz_iris = alt.Chart(
+    df_iris
 ).mark_circle(size=60).encode(
-    x='sepal length (cm)', y='sepal width (cm)', color='target:N'
+    x='x',
+    y='y',
+    color='z:N',
 ).properties(
-    height=375, width=575,
+    height=375,
+    width=575,
 ).interactive()
 
 # Log Model
 mlflow_vismod.log_model(
-    model=viz1, 
+    model=viz_iris, 
     artifact_path='viz',
     style='vegalite',
-    signature=infer_signature(X_train, None),
-    input_example=pd.concat([X_train, y_train], axis=1, sort=False),
+    signature=infer_signature(X_train_iris, None),
+    input_example=df_iris,
 )
 
 # Optional: log artifact
-viz1.save('./example.html')
+viz_iris.save('./example.html')
 mlflow.log_artifact(local_path='./example.html', artifact_path='charts')
+```
+We will also replace the generic (x, y, z) labels with the dataset specific components.
+```python
+# Label Chart
+viz_iris.title = 'Iris Classifications'
+viz_iris.encoding.x.title = column_map_iris['x']
+viz_iris.encoding.y.title = column_map_iris['y']
+viz_iris.encoding.color.title = column_map_iris['z']
+viz_iris
 ```
 
 ## How to Load a Visualization Model
 Now, that you have defined a model, you can load the saved model and apply it to a different dataset.
 
-```python
-# Define Viz
-viz2 = alt.Chart(
-    pd.concat([X_dtrain, y_dtrain], axis=1, sort=False)
-).mark_circle(size=60).encode(
-    x='carat', y='clarity', color='cut:N'
-).properties(
-    height=375, width=575,
-).interactive()
+First we will load the ML model.
 
+```python
 # Load model
-model_uri = os.path.join(run1.to_dictionary()['info']['artifact_uri'], 'viz')
-loaded = mlflow_vismod.load_model(
+model_uri = os.path.join(run_iris.to_dictionary()['info']['artifact_uri'], 'viz')
+loaded_viz_iris = mlflow_vismod.load_model(
     model_uri=model_uri,
     style='vegalite'
 )
-
-# Rendering new data / subset of data
-new_data = pd.concat([X_train, y_train], axis=1, sort=False)
-loaded.display(model_input=new_data[new_data['target'] != 2])
 ```
 
-With `mlflow-vizmod` you can create a new visualization using the same model from the first visualization (i.e. `model_uri`).
+Next, we will load the visualization model; just like an ML model must be able to accept new instances of data for inference and that instance must be compliant with the model in terms of features, so must a visualization be able to accept and render new instances of compliant data
+
+```python
+# Reuse Iris Viz
+viz_diamond = loaded_viz_iris.display(df_diamond)
+
+
+# Label Chart
+# We're replacing the generic x,y,z labels with their dataset-specific counterparts
+viz_diamond.title = 'Diamond Classifications'
+viz_diamond.encoding.x.title = column_map_diamond['x']
+viz_diamond.encoding.y.title = column_map_diamond['y']
+viz_diamond.encoding.color.title = column_map_diamond['z']
+
+
+# Rendering new data / subset of data
+viz_iris | viz_diamond
+```
 
 <img src="https://raw.githubusercontent.com/dennyglee/mlflow-vizmod/main/images/mlflow-vizmod_2-chart-1-model.gif" width=1000/>
+
+With `mlflow-vizmod` you can create a new visualization using the same model (`viz_iris`) from the first visualization model (i.e. `model_uri`).
 
 
 ## Deploy an Interactive Web Visualization with MLflow Registry
@@ -139,7 +159,7 @@ To do this:
 * Alter the visualization as needed, using registry tags to point the new version of the model
 
 
-<img src="https://raw.githubusercontent.com/dennyglee/mlflow-vizmod/main/images/mlflow-vizmod_model-repository.gif" width=1000/>
+<img src="https://raw.githubusercontent.com/dennyglee/mlflow-vizmod/main/images/mlflow-vizmod_databricks-model-repository.gif" width=1000/>
 
 
 
