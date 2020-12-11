@@ -163,12 +163,3 @@ To do this:
 
 
 
-## Action Items
-
-* Update notebook so instead of logging viz2, load the model saved in viz1 and create the visualization based on the model saved in viz1.
-* Add another code example of deploying visualization model to MLflow Model Registry and then load the model.
-
-
-
-
-
