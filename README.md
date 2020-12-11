@@ -159,7 +159,7 @@ To do this:
 * Alter the visualization as needed, using registry tags to point the new version of the model
 
 
-<img src="https://raw.githubusercontent.com/dennyglee/mlflow-vizmod/main/images/mlflow-vizmod_databricks-model-repository.gif" width=1000/>
+<img src="https://raw.githubusercontent.com/dennyglee/mlflow-vizmod/main/images/mlflow-vizmod_databricks-model-repository-v2.gif" width=1000/>
 
 
 
