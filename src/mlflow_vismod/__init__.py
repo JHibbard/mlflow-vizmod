@@ -33,11 +33,14 @@ import mlflow_vismod
 import mlflow_vismod.styles
 
 
-FLAVOR_NAME = 'mlflow_vismod'
-MODEL_DIR_SUBPATH = 'viz'
+FLAVOR_NAME = "mlflow_vismod"
+MODEL_DIR_SUBPATH = "viz"
 SERIALIZATION_FORMAT_PICKLE = "pickle"
 SERIALIZATION_FORMAT_CLOUDPICKLE = "cloudpickle"
-SUPPORTED_SERIALIZATION_FORMATS = [SERIALIZATION_FORMAT_PICKLE, SERIALIZATION_FORMAT_CLOUDPICKLE]
+SUPPORTED_SERIALIZATION_FORMATS = [
+    SERIALIZATION_FORMAT_PICKLE,
+    SERIALIZATION_FORMAT_CLOUDPICKLE,
+]
 
 _logger = logging.getLogger(__name__)
 
@@ -52,8 +55,7 @@ def iter_namespace(ns_pkg):
 
 _discovered_styles = {
     name: importlib.import_module(name)
-    for finder, name, ispkg
-    in iter_namespace(mlflow_vismod.styles)
+    for finder, name, ispkg in iter_namespace(mlflow_vismod.styles)
 }
 
 
@@ -69,7 +71,7 @@ def get_default_conda_env(style):
 
     return _mlflow_conda_env(
         additional_conda_deps=None,
-        additional_pip_deps=['altair==4.1.0', f'mlflow.styles.{style}'],
+        additional_pip_deps=["altair==4.1.0", f"mlflow.styles.{style}"],
         additional_conda_channels=None,
     )
 
@@ -110,10 +112,11 @@ def save_model(
     input_example=None,
     style=None,
 ):
-    """
-    """
+    """"""
     if os.path.exists(path):
-        raise MlflowException("Path '{}' already exists".format(path), DIRECTORY_NOT_EMPTY)
+        raise MlflowException(
+            "Path '{}' already exists".format(path), DIRECTORY_NOT_EMPTY
+        )
     os.makedirs(path)
     if mlflow_model is None:
         mlflow_model = Model()
@@ -123,15 +126,15 @@ def save_model(
         _save_example(mlflow_model, input_example, path)
 
     # Style-specific Save Logic
-    current_style = _discovered_styles[f'mlflow_vismod.styles.{style}']
+    current_style = _discovered_styles[f"mlflow_vismod.styles.{style}"]
     current_style.Style.save(model, path)
 
     # Saving Conda Environment
-    conda_env_subpath = 'conda.yaml'
+    conda_env_subpath = "conda.yaml"
     if conda_env is None:
         conda_env = get_default_conda_env(style=style)
     elif not isinstance(conda_env, dict):
-        with open(conda_env, 'r') as f:
+        with open(conda_env, "r") as f:
             conda_env = yaml.safe_load(f)
     with open(os.path.join(path, conda_env_subpath), "w") as f:
         yaml.safe_dump(conda_env, stream=f, default_flow_style=False)
@@ -139,9 +142,11 @@ def save_model(
     mlflow_model.add_flavor(
         FLAVOR_NAME,
         # saved_model_dir=MODEL_DIR_SUBPATH,
-        pickled_model='viz.pkl',
+        pickled_model="viz.pkl",
     )
-    pyfunc.add_to_model(mlflow_model, loader_module="mlflow_vismod", env=conda_env_subpath)
+    pyfunc.add_to_model(
+        mlflow_model, loader_module="mlflow_vismod", env=conda_env_subpath
+    )
     mlflow_model.save(os.path.join(path, MLMODEL_FILE_NAME))
 
 
@@ -183,11 +188,17 @@ def load_model(model_uri, style=None):
         artifact_uri=_download_artifact_from_uri(artifact_uri=model_uri),
     )
     """
-    current_style = _discovered_styles[f'mlflow_vismod.styles.{style}']
+    current_style = _discovered_styles[f"mlflow_vismod.styles.{style}"]
     local_model_path = _download_artifact_from_uri(artifact_uri=model_uri)
-    flavor_conf = _get_flavor_configuration(model_path=local_model_path, flavor_name=FLAVOR_NAME)
-    vismod_model_artifacts_path = os.path.join(local_model_path, flavor_conf['pickled_model'])
-    serialization_format = flavor_conf.get('serialization_format', SERIALIZATION_FORMAT_CLOUDPICKLE)
+    flavor_conf = _get_flavor_configuration(
+        model_path=local_model_path, flavor_name=FLAVOR_NAME
+    )
+    vismod_model_artifacts_path = os.path.join(
+        local_model_path, flavor_conf["pickled_model"]
+    )
+    serialization_format = flavor_conf.get(
+        "serialization_format", SERIALIZATION_FORMAT_CLOUDPICKLE
+    )
     return current_style.Style(
         artifact_uri=vismod_model_artifacts_path,
     )

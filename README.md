@@ -160,6 +160,3 @@ To do this:
 
 
 <img src="https://raw.githubusercontent.com/dennyglee/mlflow-vizmod/main/images/mlflow-vizmod_databricks-model-repository-v2.gif" width=1000/>
-
-
-
