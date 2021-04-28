@@ -64,7 +64,6 @@ mlflow.log_metric('accuracy', value=clf.score(X_test, y_test))
 mlflow.sklearn.log_model(
     sk_model=clf,
     artifact_path='model',
-    signature=infer_signature(X_train, clf.predict(X_train)),
 )
 ```
 
@@ -88,7 +87,6 @@ mlflow_vismod.log_model(
     model=viz_iris, 
     artifact_path='viz',
     style='vegalite',
-    signature=infer_signature(X_train_iris, None),
     input_example=df_iris,
 )
 
