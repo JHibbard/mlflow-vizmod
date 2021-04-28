@@ -81,7 +81,7 @@ def log_model(
     model,  # vega_saved_model_dir,
     artifact_path,
     conda_env=None,
-    signature=None,
+    # signature=None,
     input_example=None,
     registered_model_name=None,
     style=None,
@@ -96,7 +96,7 @@ def log_model(
         flavor=mlflow_vismod,
         conda_env=conda_env,
         registered_model_name=registered_model_name,
-        signature=signature,
+        # signature=signature,
         input_example=input_example,
         style=style,
     )
@@ -108,11 +108,14 @@ def save_model(
     path,
     mlflow_model=None,
     conda_env=None,
-    signature=None,
+    # signature=None,
     input_example=None,
     style=None,
 ):
-    """"""
+    """Save a visual model to a local file or a run.
+
+
+    """
     if os.path.exists(path):
         raise MlflowException(
             "Path '{}' already exists".format(path), DIRECTORY_NOT_EMPTY
@@ -120,8 +123,8 @@ def save_model(
     os.makedirs(path)
     if mlflow_model is None:
         mlflow_model = Model()
-    if signature is not None:
-        mlflow_model.signature = signature
+    # if signature is not None:
+    #     mlflow_model.signature = signature
     if input_example is not None:
         _save_example(mlflow_model, input_example, path)
 
@@ -151,42 +154,19 @@ def save_model(
 
 
 def load_model(model_uri, style=None):
-    """
-    def load_model(model_uri):
-    '''
-    Load a scikit-learn model from a local file or a run.
+    """Load a visual model from a local file or a run.
+
     :param model_uri: The location, in URI format, of the MLflow model, for example:
-                      - ``/Users/me/path/to/local/model``
-                      - ``relative/path/to/local/model``
-                      - ``s3://my_bucket/path/to/model``
-                      - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
-                      - ``models:/<model_name>/<model_version>``
-                      - ``models:/<model_name>/<stage>``
-                      For more information about supported URI schemes, see
-                      `Referencing Artifacts <https://www.mlflow.org/docs/latest/concepts.html#
-                      artifact-locations>`_.
-    :return: A scikit-learn model.
-    .. code-block:: python
-        :caption: Example
-        import mlflow.sklearn
-        sk_model = mlflow.sklearn.load_model("runs:/96771d893a5e46159d9f3b49bf9013e2/sk_models")
-        # use Pandas DataFrame to make predictions
-        pandas_df = ...
-        predictions = sk_model.predict(pandas_df)
-    '''
-    local_model_path = _download_artifact_from_uri(artifact_uri=model_uri)
-    flavor_conf = _get_flavor_configuration(model_path=local_model_path, flavor_name=FLAVOR_NAME)
-    sklearn_model_artifacts_path = os.path.join(local_model_path, flavor_conf["pickled_model"])
-    serialization_format = flavor_conf.get("serialization_format", SERIALIZATION_FORMAT_PICKLE)
-    return _load_model_from_local_file(
-        path=sklearn_model_artifacts_path, serialization_format=serialization_format
-    )
-    """
-    """
-    current_style = _discovered_styles[f'mlflow_vismod.styles.{style}']
-    return current_style.Style(
-        artifact_uri=_download_artifact_from_uri(artifact_uri=model_uri),
-    )
+                  - ``/Users/me/path/to/local/model``
+                  - ``relative/path/to/local/model``
+                  - ``s3://my_bucket/path/to/model``
+                  - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
+                  - ``models:/<model_name>/<model_version>``
+                  - ``models:/<model_name>/<stage>``
+                  For more information about supported URI schemes, see
+                  `Referencing Artifacts <https://www.mlflow.org/docs/latest/concepts.html#
+                  artifact-locations>`_.
+    :return: A visual model.
     """
     current_style = _discovered_styles[f"mlflow_vismod.styles.{style}"]
     local_model_path = _download_artifact_from_uri(artifact_uri=model_uri)

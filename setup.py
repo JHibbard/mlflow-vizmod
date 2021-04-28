@@ -15,9 +15,9 @@ setup(
     description=DESCRIPTION,
     install_requires=[
         "mlflow>=1.11.0",
-        "PyYAML==5.3.1",
-        "altair==4.1.0",
-        "altair_viewer",
+        "PyYAML>=5.3.1",
+        "altair>=4.1.0",
+        "altair_viewer>=0.3.0",
     ],
     extras_require={},
     packages=find_namespace_packages("src"),
